@@ -246,9 +246,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Form submission
   const contactForm = document.getElementById('contactForm');
   if (contactForm) {
     contactForm.addEventListener('submit', function(e) {
       e.preventDefault();
+
+      // Add form submission logic here
+      // For example, gather form data and send it via AJAX, or display a success message
+
+      const formData = new FormData(contactForm);
+      // Perform an action with form data (e.g., sending it to the server)
+
+      console.log('Form submitted:', formData);
+    });
+  }
+
 
