@@ -92,95 +92,104 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Payment method toggle
-  document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-      if (this.value === 'stripe') {
-        document.getElementById('stripe-payment-element').style.display = 'block';
-        document.getElementById('eft-instructions').style.display = 'none';
-        document.getElementById('button-text').textContent = 'Pay with Card';
-      } else {
-        document.getElementById('stripe-payment-element').style.display = 'none';
-        document.getElementById('eft-instructions').style.display = 'block';
-        document.getElementById('button-text').textContent = 'Place Order';
-      }
+  const paymentMethodRadios = document.querySelectorAll('input[name="payment-method"]');
+  if (paymentMethodRadios.length > 0) {
+    paymentMethodRadios.forEach(radio => {
+      radio.addEventListener('change', function() {
+        if (this.value === 'stripe') {
+          document.getElementById('stripe-payment-element').style.display = 'block';
+          document.getElementById('eft-instructions').style.display = 'none';
+          document.getElementById('button-text').textContent = 'Pay with Card';
+        } else {
+          document.getElementById('stripe-payment-element').style.display = 'none';
+          document.getElementById('eft-instructions').style.display = 'block';
+          document.getElementById('button-text').textContent = 'Place Order';
+        }
+      });
     });
-  });
+  }
 
   // Form submission
-  document.getElementById('checkout-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
+  const checkoutForm = document.getElementById('checkout-form');
+  if (checkoutForm) {
+    checkoutForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
 
-    if (cart.length === 0) {
-      showNotification('Your cart is empty!', true);
-      return;
-    }
-
-    const formData = new FormData(this);
-    const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
-
-    // Show loading state
-    document.getElementById('button-text').style.display = 'none';
-    document.getElementById('button-spinner').style.display = 'inline-block';
-    document.getElementById('submit-order').disabled = true;
-
-    try {
-      if (paymentMethod === 'stripe') {
-        // Simulate Stripe payment processing
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // In a real implementation, you would use Stripe's API here
-        // For demo purposes, we'll assume the payment was successful
+      if (cart.length === 0) {
+        showNotification('Your cart is empty!', true);
+        return;
       }
 
-      // Process order
-      const orderData = {
-        to: formData.get('email'),
-        customer_name: formData.get('name'),
-        customer_email: formData.get('email'),
-        customer_phone: formData.get('phone'),
-        customer_address: formData.get('address'),
-        customization: formData.get('customization'),
-        order_ref: 'SL' + Date.now(),
-        order_date: new Date().toLocaleDateString('en-ZA'),
-        order_items: generateOrderItemsHTML(),
-        order_total: calculateOrderTotal(),
-        payment_method: paymentMethod === 'stripe' ? 'Credit Card' : 'Bank Transfer (EFT)',
-        admin_email: 'a.lawry98@gmail.com' // Send admin email to this address
-      };
+      const formData = new FormData(this);
+      const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
 
-      // Send order data to server (simulated)
-      const response = await sendOrderToServer(orderData);
+      // Show loading state
+      document.getElementById('button-text').style.display = 'none';
+      document.getElementById('button-spinner').style.display = 'inline-block';
+      document.getElementById('submit-order').disabled = true;
 
-      if (response.success) {
-        // Show success modal with order details
-        document.getElementById('order-ref').textContent = orderData.order_ref;
-        document.getElementById('customer-name').textContent = orderData.customer_name;
-        document.getElementById('order-total').textContent = 'R' + orderData.order_total;
-        document.getElementById('success-modal').classList.add('active');
+      try {
+        if (paymentMethod === 'stripe') {
+          // Simulate Stripe payment processing
+          await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // Reset cart and form
-        cart = [];
-        updateCart();
-        this.reset();
-      } else {
-        throw new Error(response.error || 'Failed to process order');
+          // In a real implementation, you would use Stripe's API here
+          // For demo purposes, we'll assume the payment was successful
+        }
+
+        // Process order
+        const orderData = {
+          to: formData.get('email'),
+          customer_name: formData.get('name'),
+          customer_email: formData.get('email'),
+          customer_phone: formData.get('phone'),
+          customer_address: formData.get('address'),
+          customization: formData.get('customization'),
+          order_ref: 'SL' + Date.now(),
+          order_date: new Date().toLocaleDateString('en-ZA'),
+          order_items: generateOrderItemsHTML(),
+          order_total: calculateOrderTotal(),
+          payment_method: paymentMethod === 'stripe' ? 'Credit Card' : 'Bank Transfer (EFT)',
+          admin_email: 'a.lawry98@gmail.com' // Send admin email to this address
+        };
+
+        // Send order data to server (simulated)
+        const response = await sendOrderToServer(orderData);
+
+        if (response.success) {
+          // Show success modal with order details
+          document.getElementById('order-ref').textContent = orderData.order_ref;
+          document.getElementById('customer-name').textContent = orderData.customer_name;
+          document.getElementById('order-total').textContent = 'R' + orderData.order_total;
+          document.getElementById('success-modal').classList.add('active');
+
+          // Reset cart and form
+          cart = [];
+          updateCart();
+          this.reset();
+        } else {
+          throw new Error(response.error || 'Failed to process order');
+        }
+
+      } catch (error) {
+        console.error('Order processing error:', error);
+        showNotification('Error: ' + error.message, true);
+      } finally {
+        // Reset button state
+        document.getElementById('button-text').style.display = 'inline';
+        document.getElementById('button-spinner').style.display = 'none';
+        document.getElementById('submit-order').disabled = false;
       }
-
-    } catch (error) {
-      console.error('Order processing error:', error);
-      showNotification('Error: ' + error.message, true);
-    } finally {
-      // Reset button state
-      document.getElementById('button-text').style.display = 'inline';
-      document.getElementById('button-spinner').style.display = 'none';
-      document.getElementById('submit-order').disabled = false;
-    }
-  });
+    });
+  }
 
   // Close modal functionality
-  document.getElementById('modal-close').addEventListener('click', function() {
-    document.getElementById('success-modal').classList.remove('active');
-  });
+  const modalClose = document.getElementById('modal-close');
+  if (modalClose) {
+    modalClose.addEventListener('click', function() {
+      document.getElementById('success-modal').classList.remove('active');
+    });
+  }
 
   // Helper functions
   function generateOrderItemsHTML() {
@@ -215,16 +224,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initialize cart
   updateCart();
-});
 
-// Mobile Menu Toggle
-document.addEventListener('DOMContentLoaded', function() {
+  // Mobile Menu Toggle
   const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
   const navMenu = document.querySelector('nav ul');
 
-  mobileMenuBtn.addEventListener('click', function() {
-    navMenu.classList.toggle('show');
-  });
+  if (mobileMenuBtn && navMenu) {
+    mobileMenuBtn.addEventListener('click', function() {
+      navMenu.classList.toggle('show');
+    });
+  }
 
   // Smooth scrolling for navigation links
   document.querySelectorAll('nav a').forEach(anchor => {
@@ -232,20 +241,26 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
 
       const targetId = this.getAttribute('href');
+      // Skip if it's a non-anchor link
+      if (targetId === '#' || !targetId.startsWith('#')) return;
+
       const targetSection = document.querySelector(targetId);
 
-      window.scrollTo({
-        top: targetSection.offsetTop - 80,
-        behavior: 'smooth'
-      });
+      if (targetSection) {
+        window.scrollTo({
+          top: targetSection.offsetTop - 80,
+          behavior: 'smooth'
+        });
 
-      // Close mobile menu after clicking
-      if (navMenu.classList.contains('show')) {
-        navMenu.classList.remove('show');
+        // Close mobile menu after clicking
+        if (navMenu && navMenu.classList.contains('show')) {
+          navMenu.classList.remove('show');
+        }
       }
     });
   });
 
+  // Contact form submission
   const contactForm = document.getElementById('contactForm');
   if (contactForm) {
     contactForm.addEventListener('submit', function(e) {
@@ -258,7 +273,8 @@ document.addEventListener('DOMContentLoaded', function() {
       // Perform an action with form data (e.g., sending it to the server)
 
       console.log('Form submitted:', formData);
+      alert('Thank you for your message! We will get back to you soon.');
+      contactForm.reset();
     });
   }
-
-
+});
